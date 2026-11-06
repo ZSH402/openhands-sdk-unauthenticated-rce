@@ -212,6 +212,36 @@ curl -sS -X POST http://TARGET:PORT/api/bash/execute_bash_command \
 
 `poc/exploit.sh` wraps both flows.
 
+## Extension: warm-pool takeover (verified)
+
+`deferred_init` defaults to `False`, but its own description says it exists for **warm-pool
+deployments** — pods pre-warmed in dormant state, per-user config delivered when a user is
+matched. In that window `/api/init` is open, and `InitRequest` (`init_router.py:86-110`)
+validates nothing:
+
+```python
+session_api_keys: list[str] | None = Field(default=None, ...)
+conversations_path: Path | None = Field(default=None, ...)
+bash_events_dir: Path | None = Field(default=None, ...)
+conversation_worktree_root: Path | None = Field(default=None, ...)
+```
+
+`_build_initialized_config` (`:188-215`) accepts all of them. Extracting that function from
+the source via AST and running it against a stub Config, one anonymous POST produces:
+
+```
+session_api_keys   : ['attacker-key']
+secret_key         : attacker-key      <- falls back to the first session key
+conversations_path : /etc              <- data directory redirected
+bash_events_dir    : /
+deferred_init      : False             <- server flipped to ready
+```
+
+So an attacker who reaches a dormant pod before the orchestrator does takes three things at
+once: the credential, the encryption key, and the data directory. This is what separates it
+from the plain missing-auth case — it defeats the assumption "I configured a session key,
+therefore I am safe".
+
 ## Impact
 
 Arbitrary command execution as the agent_server process. That process holds the user's
