@@ -1,0 +1,22 @@
+{
+  "sealed_at": "2026-11-07T17:04:02.562061+00:00",
+  "root": "/root/渗透测试/repo-openhands-sdk/evidence",
+  "count": 2,
+  "total_bytes": 2947,
+  "files": [
+    {
+      "path": "e2e-unauth-bash.log",
+      "size": 623,
+      "mtime": "2026-11-07T17:03:59.125636+00:00",
+      "sha256": "2da4c395d0030bb250575b0e2792e8c34d3e7bb5281c755b32abd4e24adafd02",
+      "blob": "blobs/2d/2da4c395d0030bb250575b0e2792e8c34d3e7bb5281c755b32abd4e24adafd02.bin"
+    },
+    {
+      "path": "e2e-wildcard-bind-warning.log",
+      "size": 2324,
+      "mtime": "2026-11-07T17:03:59.128777+00:00",
+      "sha256": "b343f5ddde4f5eb46dd125413b9be4e42b538e90f59d28579920c2dd90feda5f",
+      "blob": "blobs/b3/b343f5ddde4f5eb46dd125413b9be4e42b538e90f59d28579920c2dd90feda5f.bin"
+    }
+  ]
+}

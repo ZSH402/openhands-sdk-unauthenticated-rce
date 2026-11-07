@@ -1,0 +1,41 @@
+# E-006  (hypothesis undefined)
+command: set -u
+cd /root/渗透测试/recon/ohsdk/openhands-agent-server
+export PYTHONPATH="/root/渗透测试/recon/ohsdk/openhands-agent-server:/root/渗透测试/recon/ohsdk/openhands-sdk:/root/渗透测试/recon/ohsdk/openhands-tools:/root/渗透测试/recon/ohsdk/openhands-workspace"
+timeout 26 python3 -m openhands.agent_server --host 0.0.0.0 --port 50102 > /tmp/oh_bind.log 2>&1 &
+SRV=$!
+sleep 16
+echo "=== 启动告警全文 ==="
+grep -i -A6 "Binding to all interfaces" /tmp/oh_bind.log | head -14
+echo "=== uvicorn 实际绑定 ==="
+grep -i "Uvicorn running on" /tmp/oh_bind.log
+echo "=== ss 监听 ==="
+ss -ltn | grep ':50102'
+echo "=== 未认证执行 ==="
+curl -sS --max-time 8 -X POST http://127.0.0.1:50102/api/bash/execute_bash_command -H 'Content-Type: application/json' -d '{"command":"id"}' -w '\nHTTP:%{http_code}\n'
+echo "=== 关闭 ==="
+kill "$SRV" 2>/dev/null; wait "$SRV" 2>/dev/null; sleep 2
+ss -ltn | grep ':50102' || echo "port closed"
+expect: 显式 --host 0.0.0.0 且无 session_api_keys 时仅打印 warning，uvicorn 仍绑 0.0.0.0，未认证执行返回 200 与 uid=0(root)
+repeat: 1  stability: single-run
+toolFailureMarkers: none
+
+--- run 1 | exit 0 | 18345ms | aborted=false
+=== 启动告警全文 ===
+[11/07/26 12:03:38] WARNING  Binding to all interfaces (0.0.0.0) __main__.py:309
+                             without a session API key: the                     
+                             agent server will be                               
+                             unauthenticated and reachable from                 
+                             the network. Set SESSION_API_KEY                   
+                             (or OH_SESSION_API_KEYS_0) to                      
+                             require authentication, or bind to                 
+=== uvicorn 实际绑定 ===
+[11/07/26 12:03:39] INFO     Uvicorn running on                    server.py:216
+=== ss 监听 ===
+LISTEN 0      2048         0.0.0.0:50102      0.0.0.0:*
+=== 未认证执行 ===
+{"id":"d7d946a18cf848c08fb8bacde04e81d2","timestamp":"2026-11-07T17:03:50.271157Z","command_id":"64848aa520aa4697b04c11285d5a1b77","order":0,"exit_code":0,"stdout":"uid=0(root) gid=0(root) groups=0(root)\n","stderr":null,"kind":"BashOutput"}
+HTTP:200
+=== 关闭 ===
+port closed
+

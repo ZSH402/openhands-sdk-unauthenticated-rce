@@ -185,6 +185,36 @@ interface.
 The guard narrows exposure; it does not fix the defect. The defect is that the server
 serves anonymous requests with full authority when no credential is configured.
 
+Both branches were executed, not just read. `evidence/e2e-wildcard-bind-warning.log`:
+
+```
+WARNING  Binding to all interfaces (0.0.0.0) without a session API key: the agent server
+         will be unauthenticated and reachable from the network. Set SESSION_API_KEY (or
+         OH_SESSION_API_KEYS_0) to require authentication, or bind to a loopback address
+         with --host.
+INFO     Uvicorn running on http://0.0.0.0:50102
+```
+
+`ss -ltn` → `LISTEN 0 2048 0.0.0.0:50102 0.0.0.0:*`, and an unauthenticated POST to that
+instance still returned `200` with `uid=0(root)`. The warning is the entire defence on
+that path.
+
+## Evidence
+
+`evidence/` is sealed with content-addressed blobs; `MANIFEST.json` records a sha256 per
+source file and `MANIFEST.json.sha256` pins the manifest itself.
+
+```
+MANIFEST.json sha256 = e471e1afba55309a4d8c7e8f85c87495e1e5f8f95dae6e63dc8965f14a3588ca
+```
+
+```bash
+python3 tools/seal_evidence.py --verify evidence
+```
+
+Exit code 0 means the two logs under `evidence/` are byte-identical to what was sealed.
+Any change to a log, a blob, or a post-seal addition is reported and exits non-zero.
+
 ## Reproduction
 
 Normal deployment:
